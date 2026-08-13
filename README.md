@@ -48,10 +48,10 @@ Numerical behavior:
 
 - Left zone: engage `x < 0.24`, release `x > 0.45` (mirrored frame x).
 - Right zone: engage `x > 0.76`, release `x < 0.55`.
-- Within a side, hand below mid (`y > 0.62`) = direction only; hand raised above
-  mid (`y < 0.55`, release hysteresis to `y > 0.62`) = direction + jump. While
-  raised on a side, Space is tapped every 280 ms so the character keeps jumping
-  while running (jump + right + jump + right).
+- Within a side, hand at natural height = direction only; raise the hand clearly
+  above shoulder/head level (`y < 0.42`, release hysteresis to `y > 0.50`) =
+  direction + jump. While raised on a side, Space is tapped every 280 ms so the
+  character keeps jumping while running (jump + right + jump + right).
 - Center (no side active) = neutral; no keys are held.
 - Index-finger double tap (two curls within 500 ms) sends a click (Space).
 - Latency: one camera frame (~33 ms) plus a local POST (~5 ms).
@@ -60,8 +60,8 @@ Numerical behavior:
 
 | Gesture | Action | Key |
 |---|---|---|
-| Hand low-to-mid on left/right side | Hold that direction | Left/Right arrow |
-| Hand raised above mid on a side | Run + keep jumping | Arrows + Space |
+| Hand at natural height on left/right side | Hold that direction | Left/Right arrow |
+| Hand raised above shoulder level on a side | Run + keep jumping | Arrows + Space |
 | Hand in center | Stop (release all) | - |
 | Index-finger double tap | Click | Space |
 

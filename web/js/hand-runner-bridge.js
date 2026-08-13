@@ -79,7 +79,7 @@ const HandRunner = (() => {
   // mid->up = direction + jump (Space tapped repeatedly while held).
   const JOY_L_ON = 0.24, JOY_L_OFF = 0.45;
   const JOY_R_ON = 0.76, JOY_R_OFF = 0.55;
-  const JUMP_ON = 0.55, JUMP_OFF = 0.62;
+  const JUMP_ON = 0.42, JUMP_OFF = 0.50;
   const JUMP_REPEAT_MS = 280;
   const joy = { left: false, right: false, jump: false };
   let jumpTimer = null;
@@ -87,7 +87,7 @@ const HandRunner = (() => {
   // Diagonal jump (direction + raised hand) taps Space repeatedly so the
   // character keeps jumping while running: jump + right + jump + right.
   function startJumpRepeat() {
-    stopJumpRepeat();
+    if (jumpTimer) { clearTimeout(jumpTimer); jumpTimer = null; }
     const tap = () => {
       if (!joy.jump) return;
       sendKey("jump", "up");
@@ -311,8 +311,8 @@ const HandRunner = (() => {
       } else if (x > JOY_R_ON) {
         sendKey("right", "down"); joy.right = true;
       }
-      // Height within the active side: raised above mid also jumps, and keeps
-      // tapping Space so the character bounces while running.
+      // Height within the active side: raise the hand clearly above the
+      // shoulder/head level to also jump (taps Space repeatedly while held).
       const onSide = joy.left || joy.right;
       const wantJump = onSide && (joy.jump ? py < JUMP_OFF : py < JUMP_ON);
       if (onSide) {
