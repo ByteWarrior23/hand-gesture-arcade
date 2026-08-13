@@ -81,13 +81,14 @@ const HandRunner = (() => {
   const JOY_R_ON = 0.76, JOY_R_OFF = 0.55;
   const JUMP_ON = 0.42, JUMP_OFF = 0.50;
   const JUMP_REPEAT_MS = 280;
-  const joy = { left: false, right: false, jump: false };
+  const joy = { left: false, right: false, jump: false, repeat: false };
   let jumpTimer = null;
 
-  // Diagonal jump (direction + raised hand) taps Space repeatedly so the
-  // character keeps jumping while running: jump + right + jump + right.
+  // Jump repeat (side + raised hand): taps Space repeatedly so the character
+  // keeps jumping while running. Plain center jump is a simple hold instead.
   function startJumpRepeat() {
     if (jumpTimer) { clearTimeout(jumpTimer); jumpTimer = null; }
+    joy.repeat = true;
     const tap = () => {
       if (!joy.jump) return;
       sendKey("jump", "up");
@@ -99,6 +100,7 @@ const HandRunner = (() => {
 
   function stopJumpRepeat() {
     if (jumpTimer) { clearTimeout(jumpTimer); jumpTimer = null; }
+    joy.repeat = false;
     if (joy.jump) { sendKey("jump", "up"); joy.jump = false; }
   }
 
@@ -314,17 +316,26 @@ const HandRunner = (() => {
       // Height within the active side: raise the hand clearly above the
       // shoulder/head level to also jump (taps Space repeatedly while held).
       const onSide = joy.left || joy.right;
-      const wantJump = onSide && (joy.jump ? py < JUMP_OFF : py < JUMP_ON);
       if (onSide) {
+        const wantJump = joy.jump ? py < JUMP_OFF : py < JUMP_ON;
         if (wantJump && !joy.jump) {
           joy.jump = true;
+          joy.repeat = false;
           sendKey("jump", "down");
+          startJumpRepeat();
+        } else if (wantJump && joy.jump && !joy.repeat) {
           startJumpRepeat();
         } else if (!wantJump && joy.jump) {
           stopJumpRepeat();
         }
       } else {
+        // Center: raised hand = plain jump hold (no direction).
         stopJumpRepeat();
+        const wantJump = joy.jump ? py < JUMP_OFF : py < JUMP_ON;
+        if (wantJump !== joy.jump) {
+          sendKey("jump", wantJump ? "down" : "up");
+          joy.jump = wantJump;
+        }
       }
       // Index-finger double-tap = click.
       updateTap(lm[8].y - py, now);
