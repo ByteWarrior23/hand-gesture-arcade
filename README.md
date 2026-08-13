@@ -4,44 +4,44 @@ Webcam hand control for two games. MediaPipe HandLandmarker runs in the browser
 and maps hand position to game input. Everything runs locally on
 `127.0.0.1`; camera frames never leave the machine.
 
-Two games, one control model:
+Two games, two control models:
 
 | Game | Where it runs | Input path |
 |---|---|---|
-| Subway Surfers | Android app in BlueStacks 5 | Hold hand zones → repeated ADB swipes |
+| Subway Surfers | Browser game on Poki | Index-finger swipes → arrow keys |
 | Level Devil | Browser platformer | Hold hand zones → keyboard |
 
 Both games can also be played with the keyboard directly.
 
 ## Subway Surfers
 
-Real game in BlueStacks. Hand position drives it — there is no motion/swipe
-detection, so returning your hand to the center never fires an unwanted
-command. Holding a zone repeats that command every 300 ms: left/right edge =
-lane change, center-high = jump, center-low = roll, center-mid = rest.
+Web version of the game on Poki, controlled like the classic MediaPipe demo:
+track the index fingertip and flick it — each flick fires one arrow key
+(pydirectinput press, ~10 ms). No emulator, no ADB, so command latency is a
+single camera frame plus the local POST (roughly 40-50 ms).
 
 Numerical behavior (browser-side MediaPipe HandLandmarker, GPU delegate,
 640x480 input, 30 FPS video):
 
-- Side zones: engage `x < 0.24` (left) / `x > 0.76` (right), release back at
-  `0.45` / `0.55` (mirrored frame x).
-- Center vertical: jump at `y < 0.42` (release `> 0.50`), roll at `y > 0.62`
-  (release `< 0.55`). Between them is the rest band — lowering your hand from
-  the jump zone lands in rest, never a roll.
-- Action repeat: 300 ms while a zone is held (server throttle 260 ms).
-- End-to-end latency: detection (~33 ms) + POST (~5 ms) + ADB swipe (90 ms),
-  roughly 100-140 ms.
+- Swipe source: index fingertip (landmark 8), mirrored x.
+- A flick only counts when it starts inside the neutral center zone
+  (`x` and `y` in `0.30..0.70`), moves at least `0.14` from the start within
+  `400 ms`, and is dominant on one axis (1.3x). This is what stops lowering
+  your hand after an up flick from triggering roll.
+- After each flick the hand must return to center to unlock the next one.
+- Cooldown: 250 ms between flicks.
+- Command latency: detection (~33 ms) + POST (~5 ms) + key press (~10 ms).
 - Hand acceptance: best-scoring hand, `hand_score >= 0.5`.
 
 ### Controls
 
 | Gesture | Command | Key equivalent |
 |---|---|---|
-| Hold hand on left side | Swipe left (repeats) | Left arrow |
-| Hold hand on right side | Swipe right (repeats) | Right arrow |
-| Hold hand high in center | Jump (repeats) | Up arrow |
-| Hold hand low in center | Roll (repeats) | Down arrow |
-| Hand mid-center | Rest — nothing fires | - |
+| Flick finger left | Lane left | Left arrow |
+| Flick finger right | Lane right | Right arrow |
+| Flick finger up | Jump | Up arrow |
+| Flick finger down | Roll | Down arrow |
+| Hand in center | Reset between flicks | - |
 
 ## Level Devil
 
