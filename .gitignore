@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Runtime
+logs/
+setup.log
+
+# Large binaries (downloaded at runtime)
+tools/apks/
+tools/BlueStacksFullInstaller.exe
