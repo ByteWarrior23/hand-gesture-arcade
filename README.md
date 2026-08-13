@@ -47,8 +47,9 @@ Numerical behavior:
 
 - Left zone: engage `x < 0.24`, release `x > 0.45` (mirrored frame x).
 - Right zone: engage `x > 0.76`, release `x < 0.55`.
-- Jump zone: `y < 0.42`; while a direction is held, jump engages at `y < 0.55`
-  (release hysteresis +0.08) so right+up and left+up hold both keys.
+- Jump zone: `y < 0.42`. While a direction is held, jump engages at `y < 0.55`
+  and Space is tapped every 280 ms, so right+up / left+up keep jumping while
+  running (jump + right + jump + right).
 - Rest zone: hand low (`y > 0.70`) releases every key.
 - Index-finger double tap (two curls within 500 ms) sends a click (Space).
 - Latency: one camera frame (~33 ms) plus a local POST (~5 ms).
