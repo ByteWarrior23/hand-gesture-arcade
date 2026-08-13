@@ -39,18 +39,20 @@ Numerical behavior (browser-side MediaPipe HandLandmarker, GPU delegate,
 
 ## Level Devil
 
-Browser platformer. Hand position maps to held keys: hold the hand at the far
-left or right edge to keep moving, raise it to jump. Position is continuous,
-so the key stays held while the hand stays in the zone.
+Browser platformer. Hand position maps to held keys, split into side zones: the
+far left/right edges of the frame run that direction, the center is neutral.
+Within an active side, the hand's height chooses the mode. Position is
+continuous, so the key stays held while the hand stays in the zone.
 
 Numerical behavior:
 
 - Left zone: engage `x < 0.24`, release `x > 0.45` (mirrored frame x).
 - Right zone: engage `x > 0.76`, release `x < 0.55`.
-- Jump zone: `y < 0.42`. While a direction is held, jump engages at `y < 0.55`
-  and Space is tapped every 280 ms, so right+up / left+up keep jumping while
-  running (jump + right + jump + right).
-- Rest zone: hand low (`y > 0.70`) releases every key.
+- Within a side, hand below mid (`y > 0.62`) = direction only; hand raised above
+  mid (`y < 0.55`, release hysteresis to `y > 0.62`) = direction + jump. While
+  raised on a side, Space is tapped every 280 ms so the character keeps jumping
+  while running (jump + right + jump + right).
+- Center (no side active) = neutral; no keys are held.
 - Index-finger double tap (two curls within 500 ms) sends a click (Space).
 - Latency: one camera frame (~33 ms) plus a local POST (~5 ms).
 
@@ -58,12 +60,10 @@ Numerical behavior:
 
 | Gesture | Action | Key |
 |---|---|---|
-| Hand at far left | Hold left | Left arrow |
-| Hand at far right | Hold right | Right arrow |
-| Hand raised | Hold jump | Space |
-| Hand raised + side | Hold direction + jump | Arrows + Space |
+| Hand low-to-mid on left/right side | Hold that direction | Left/Right arrow |
+| Hand raised above mid on a side | Run + keep jumping | Arrows + Space |
+| Hand in center | Stop (release all) | - |
 | Index-finger double tap | Click | Space |
-| Hand low or center | Stop (release all) | - |
 
 ## Architecture
 
