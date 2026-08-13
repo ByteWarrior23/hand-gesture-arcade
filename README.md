@@ -1,41 +1,47 @@
 # Hand Gesture Arcade
 
 Webcam hand control for two games. MediaPipe HandLandmarker runs in the browser
-and maps hand position and swipes to game input. Everything runs locally on
+and maps hand position to game input. Everything runs locally on
 `127.0.0.1`; camera frames never leave the machine.
 
-Two games, two control models:
+Two games, one control model:
 
 | Game | Where it runs | Input path |
 |---|---|---|
-| Subway Surfers | Android app in BlueStacks 5 | Discrete swipe commands via ADB |
-| Level Devil | Browser platformer | Continuous position-hold via keyboard |
+| Subway Surfers | Android app in BlueStacks 5 | Hold hand zones → repeated ADB swipes |
+| Level Devil | Browser platformer | Hold hand zones → keyboard |
 
 Both games can also be played with the keyboard directly.
 
 ## Subway Surfers
 
-Real game in BlueStacks. A hand swipe is one discrete command: left, right,
-jump, or roll. Each swipe fires once, then the game idles until the next swipe.
+Real game in BlueStacks. Hand position drives it — there is no motion/swipe
+detection, so returning your hand to the center never fires an unwanted
+command. Holding a zone repeats that command every 300 ms: left/right edge =
+lane change, center-high = jump, center-low = roll, center-mid = rest.
 
 Numerical behavior (browser-side MediaPipe HandLandmarker, GPU delegate,
 640x480 input, 30 FPS video):
 
-- Swipe tracker window: 450 ms, minimum displacement 0.05, velocity gate 0.2,
-  280 ms cooldown, 2-frame confirm, EMA smoothing alpha 0.7.
-- End-to-end latency: detection (~33 ms) + POST (~5 ms) + ADB swipe (90 ms)
-  gives a command latency of roughly 100-140 ms.
-- Server throttle: 260 ms per action.
+- Side zones: engage `x < 0.24` (left) / `x > 0.76` (right), release back at
+  `0.45` / `0.55` (mirrored frame x).
+- Center vertical: jump at `y < 0.42` (release `> 0.50`), roll at `y > 0.62`
+  (release `< 0.55`). Between them is the rest band — lowering your hand from
+  the jump zone lands in rest, never a roll.
+- Action repeat: 300 ms while a zone is held (server throttle 260 ms).
+- End-to-end latency: detection (~33 ms) + POST (~5 ms) + ADB swipe (90 ms),
+  roughly 100-140 ms.
 - Hand acceptance: best-scoring hand, `hand_score >= 0.5`.
 
 ### Controls
 
 | Gesture | Command | Key equivalent |
 |---|---|---|
-| Swipe hand left | Swipe left | Left arrow |
-| Swipe hand right | Swipe right | Right arrow |
-| Swipe hand up | Jump | Up arrow |
-| Swipe hand down | Roll | Down arrow |
+| Hold hand on left side | Swipe left (repeats) | Left arrow |
+| Hold hand on right side | Swipe right (repeats) | Right arrow |
+| Hold hand high in center | Jump (repeats) | Up arrow |
+| Hold hand low in center | Roll (repeats) | Down arrow |
+| Hand mid-center | Rest — nothing fires | - |
 
 ## Level Devil
 
@@ -89,7 +95,6 @@ Data flow:
    action to the server.
 4. The server dispatches it: ADB swipe for Subway Surfers, key hold/tap for
    Level Devil.
-
 ## HTTP API
 
 | Endpoint | Method | Body | Effect |
